@@ -9,9 +9,9 @@ from hauteursoleil import *
 import math
 from GPSMMS import *
 #      pour obtenir un shutdown précédant la coupure d'alimentation
-# sur gestion de la charge de batterie et de l'heure signalant envoyé
-# par un GPIO en entrée sur raspberry et recevant le signal du wipy
-# tentative pour arrêter système à parir de python à tester
+# sur gestion de la charge de batterie et de l'heure. un message par lliaison série
+# est envoyé vers le raspi a fin qu'il s'éteigne proprement avant coupure de l'alimentation
+# c'est seulement après celà que le wipy lui même va renter en sommeil profond 
 
 from subprocess import call
 

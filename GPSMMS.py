@@ -42,12 +42,17 @@ def point_immediat(listinfo):
     pass
     return "heure"+listinfo[2]+"\r\n"+"latitude  "+listinfo[3]+"\r\n"+"longitude  "+listinfo[4]
 
-def envoi_texto(ser,message):  
+def envoi_texto(ser,message):
+    global dicparametre
     ser.write(b"AT+CGNSTST=0\r\n") # arrêt du flux du GPS
     retour=videbuffer(ser)
-    ser.write(b'AT+CMGS="+33625620932"\r\n')
+    numero='"'+dicparametre.get('num-cible')+'"'
+    numero="AT+CMGS="+numero+"\r\n"
+    print(numero)
+    ser.write(bytes(numero,encoding="utf-8"))
+#    ser.write(b'AT+CMGS="+33625620932"\r\n')
+    time.sleep(0.2)
     retour= videbuffer(ser)
-    #ser.write(bytes(message,encoding="utf-8"))
     ser.write(bytes(message,encoding="utf-8"))
     ser.write(b"\x1a\r\n") # 0x1a : send   0x1b : Cancel send
     time.sleep(5) # delai pour achever la procédure d'envoi
@@ -100,11 +105,29 @@ def reception_texto(ser):
     
     return listmessage
 
+def parametrerobot():
+    global dicparametre
+    dicparametre={}
+    with open("/home/pi/Documents/robot/parametresrobot",'r')as parametresrobot:
+        for ligne in parametresrobot:
+            if ligne[0] !="#":
+                ligne=ligne.split(":")
+                ligne[0]=ligne[0].split()
+                clé=ligne[0][0]
+                ligne[1]=ligne[1].split()
+                valeur=ligne[1][0]
+                dicparametre[clé]=valeur
+                
+    return dicparametre
+
 def initialisationGPSTEXTO(ser):
+    parametrerobot()
+    print(dicparametre)
     resetSIM868(ser) 
     print("retour reset")
     num=0
-    tamponcommande = ["AT+CSCA=\"+33609001390\"\r\n","AT+CMGF=1\r\n","AT+CGNSPWR=1\r\n","AT+CGNSINF\r\n"] # liste des ordres d'initalisation
+    tamponcommande = ["AT+CSCA="+dicparametre.get('num-operateur')+"\r\n","AT+CMGF=1\r\n","AT+CGNSPWR=1\r\n","AT+CGNSINF\r\n"] # liste des ordres d'initalisation
+    #tamponcommande = ["AT+CSCA=\"+33609001390\"\r\n","AT+CMGF=1\r\n","AT+CGNSPWR=1\r\n","AT+CGNSINF\r\n"] # liste des ordres d'initalisation
     #tamponcommande = ["AT+CPIN=1234\r\n","AT+CSCA=\"++33609001390\"\r\n","AT+CMGF=1\r\n","AT+CGNSPWR=1\r\n","AT+CGNSINF\r\n"] # liste des ordres d'initalisation
     # ATTENTION le numéro qui suit at+csca est celui du serveur sms dur réseau ici +33609001390 pour le réseau SFR
     nbparam=len(tamponcommande)
@@ -171,20 +194,22 @@ def donne_point(ser):
 def resetSIM868(ser): # indispensable pour initialiser la liaison série
     p=4
     data=""
-    GPIO.setup(p, GPIO.OUT)    
-    GPIO.output(p,GPIO.HIGH)
-    GPIO.output(p,GPIO.LOW)
-    print("pin 5  low")
-    time.sleep(0.5)
-    GPIO.output(p,GPIO.HIGH)
-    time.sleep(20)
-    data = lectureserie(ser)  # le module répond toujours avec l'ordre env
-    print("amorce   ",data)
-    while data != b'OK\r\n':
-        ser.write(b"AT\r\n")
-        time.sleep(5)
+    while True:
+        GPIO.setup(p, GPIO.OUT)    
+        GPIO.output(p,GPIO.HIGH)
+        GPIO.output(p,GPIO.LOW)
+        print("pin 5  low")
+        time.sleep(3)
+        GPIO.output(p,GPIO.HIGH)
+        time.sleep(3)
         data = lectureserie(ser)  # le module répond toujours avec l'ordre env
-        print(data)        
+        #time.sleep(1)
+        if "OK" not in str(data)  :#data != b'OK\r\n':
+            ser.write(b"AT\r\n")
+            time.sleep(0.2)
+        else:
+            break
+    print(data)        
     data=""
  
     

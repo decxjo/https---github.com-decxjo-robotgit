@@ -115,7 +115,7 @@ try:
     envoi_texto(sergpstexto,point)
     listemessage=reception_texto(sergpstexto)# à la suite ce sera le traitement des messages puis leur effacement
     # ici traitement des messages
-    suppression_messages(sergpstexto)  #à mettre dans la version travail
+    supprimermessages(sergpstexto)  #à mettre dans la version travail
 
 except KeyboardInterrupt:
     if sergpstexto != None:
